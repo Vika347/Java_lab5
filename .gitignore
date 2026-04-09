@@ -1,0 +1,16 @@
+# Скомпилированные файлы
+*.class
+out/
+bin/
+
+# Файлы IntelliJ IDEA
+.idea/
+*.iml
+.DS_Store
+
+# Файлы с данными
+data/*.csv
+*.csv
+
+# Логи
+*.log
