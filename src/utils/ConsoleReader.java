@@ -2,6 +2,10 @@ package utils;
 
 import model.*;
 import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /**
  * Класс для чтения пользовательского ввода с консоли.
@@ -12,6 +16,12 @@ public class ConsoleReader {
     /** Поле сканер для чтения ввода с консоли */
     private Scanner scanner;
 
+    /** Стек для скриптов */
+    private Deque<Scanner> scriptScanners = new ArrayDeque<>();
+
+    /** Флаг выполнения скрипта */
+    private boolean inScript = false;
+
     /**
      * Конструктор - инициализирует Scanner для чтения из System.in.
      */
@@ -19,7 +29,47 @@ public class ConsoleReader {
         this.scanner = new Scanner(System.in);
     }
 
-    // БАЗОВЫЕ МЕТОДЫ ЧТЕНИЯ
+    /**
+     * Переключить чтение из файла скрипта
+     * @param fileName - имя файла скрипта
+     * @throws FileNotFoundException если файл не найден
+     */
+    public void pushScriptFile(String fileName) throws FileNotFoundException {
+        scriptScanners.push(scanner);
+        scanner = new Scanner(new File(fileName));
+        inScript = true;
+        System.out.println("Переключено на чтение из файла: " + fileName);
+    }
+
+    /**
+     * Вернуться к предыдущему источнику ввода
+     */
+    public void popScriptFile() {
+        if (!scriptScanners.isEmpty()) {
+            scanner.close();
+            scanner = scriptScanners.pop();
+            inScript = !scriptScanners.isEmpty();
+            if (!inScript) {
+                System.out.println("Возврат к чтению из консоли");
+            }
+        }
+    }
+
+    /**
+     * Проверить, есть ли следующая строка
+     * @return true если есть следующая строка
+     */
+    public boolean hasNextLine() {
+        return scanner.hasNextLine();
+    }
+
+    /**
+     * Прочитать строку без приглашения (для скриптов)
+     * @return прочитанная строка или null
+     */
+    public String readLine() {
+        return scanner.hasNextLine() ? scanner.nextLine().trim() : null;
+    }
 
     /**
      * Функция чтения строки с приглашением
@@ -27,7 +77,9 @@ public class ConsoleReader {
      * @return введенная строка (обрезанная)
      */
     public String readLine(String prompt) {
-        System.out.print(prompt);
+        if (!inScript) {
+            System.out.print(prompt);
+        }
         return scanner.nextLine().trim();
     }
 
@@ -42,7 +94,12 @@ public class ConsoleReader {
                 String input = readLine(prompt);
                 return Integer.parseInt(input);
             } catch (NumberFormatException e) {
-                System.out.println("Ошибка: Введите целое число.");
+                if (!inScript) {
+                    System.out.println("Ошибка: Введите целое число.");
+                } else {
+                    System.err.println("Ошибка: ожидалось целое число, получено: " + input);
+                    return 0;
+                }
             }
         }
     }
@@ -58,7 +115,12 @@ public class ConsoleReader {
                 String input = readLine(prompt);
                 return Double.parseDouble(input);
             } catch (NumberFormatException e) {
-                System.out.println("Ошибка: Введите число.");
+                if (!inScript) {
+                    System.out.println("Ошибка: Введите число.");
+                } else {
+                    System.err.println("Ошибка: ожидалось число, получено: " + input);
+                    return 0;
+                }
             }
         }
     }
@@ -75,7 +137,11 @@ public class ConsoleReader {
                 if (input.isEmpty()) return null;
                 return Long.parseLong(input);
             } catch (NumberFormatException e) {
-                System.out.println("Ошибка: Введите целое число.");
+                if (!inScript) {
+                    System.out.println("Ошибка: Введите целое число.");
+                } else {
+                    return null;
+                }
             }
         }
     }
@@ -92,7 +158,11 @@ public class ConsoleReader {
             try {
                 return Double.parseDouble(input);
             } catch (NumberFormatException e) {
-                System.out.println("Ошибка: Введите число или оставьте пустым для null.");
+                if (!inScript) {
+                    System.out.println("Ошибка: Введите число или оставьте пустым для null.");
+                } else {
+                    return null;
+                }
             }
         }
     }
@@ -110,7 +180,11 @@ public class ConsoleReader {
             if (InputValidator.validateName(input)) {
                 return input;
             }
-            System.out.println("Ошибка: Имя не может быть пустым.");
+            if (!inScript) {
+                System.out.println("Ошибка: Имя не может быть пустым.");
+            } else {
+                return "DefaultName";
+            }
         }
     }
 
@@ -119,7 +193,9 @@ public class ConsoleReader {
      * @return объект {@link Coordinates}
      */
     public Coordinates readCoordinates() {
-        System.out.println("Введите координаты:");
+        if (!inScript) {
+            System.out.println("Введите координаты:");
+        }
         int x = readInt("  x (int): ");
         int y = readInt("  y (int): ");
         return new Coordinates(x, y);
@@ -130,13 +206,19 @@ public class ConsoleReader {
      * @return объект {@link Difficulty}
      */
     public Difficulty readDifficulty() {
-        System.out.println("Доступные уровни сложности: " + Difficulty.getAvailableValues());
+        if (!inScript) {
+            System.out.println("Доступные уровни сложности: " + Difficulty.getAvailableValues());
+        }
         while (true) {
             String input = readLine("difficulty: ").toUpperCase();
             if (InputValidator.validateDifficulty(input)) {
                 return Difficulty.valueOf(input);
             }
-            System.out.println("Ошибка: Неверное значение. Доступны: " + Difficulty.getAvailableValues());
+            if (!inScript) {
+                System.out.println("Ошибка: Неверное значение. Доступны: " + Difficulty.getAvailableValues());
+            } else {
+                return Difficulty.EASY;
+            }
         }
     }
 
@@ -147,7 +229,9 @@ public class ConsoleReader {
      * @return объект {@link Color} или null
      */
     public Color readColor(String fieldName, boolean allowNull) {
-        System.out.println("Доступные цвета: " + Color.getAvailableValues());
+        if (!inScript) {
+            System.out.println("Доступные цвета: " + Color.getAvailableValues());
+        }
         while (true) {
             String input = readLine(fieldName + " (Enter для null): ");
             if (allowNull && input.isEmpty()) {
@@ -157,7 +241,11 @@ public class ConsoleReader {
             if (InputValidator.validateColor(upperInput)) {
                 return Color.valueOf(upperInput);
             }
-            System.out.println("Ошибка: Неверное значение. Доступны: " + Color.getAvailableValues());
+            if (!inScript) {
+                System.out.println("Ошибка: Неверное значение. Доступны: " + Color.getAvailableValues());
+            } else {
+                return null;
+            }
         }
     }
 
@@ -167,7 +255,7 @@ public class ConsoleReader {
      * @return объект {@link Location} или null
      */
     public Location readLocation(boolean allowNull) {
-        if (allowNull) {
+        if (allowNull && !inScript) {
             while (true) {
                 String choice = readLine("Ввести местоположение? (y/n): ");
                 if (choice.equalsIgnoreCase("y")) {
@@ -178,9 +266,16 @@ public class ConsoleReader {
                     System.out.println("Ошибка: введите 'y' или 'n'");
                 }
             }
+        } else if (allowNull && inScript) {
+            String choice = readLine("Ввести местоположение? (y/n): ");
+            if (choice.equalsIgnoreCase("n")) {
+                return null;
+            }
         }
 
-        System.out.println("Введите местоположение:");
+        if (!inScript) {
+            System.out.println("Введите местоположение:");
+        }
         long x = readLong("  x (long): ");
         double y = readDouble("  y (double): ");
 
@@ -191,7 +286,12 @@ public class ConsoleReader {
                 z = Integer.parseInt(input);
                 break;
             } catch (NumberFormatException e) {
-                System.out.println("Ошибка: Введите целое число.");
+                if (!inScript) {
+                    System.out.println("Ошибка: Введите целое число.");
+                } else {
+                    z = 0;
+                    break;
+                }
             }
         }
 
@@ -203,7 +303,9 @@ public class ConsoleReader {
      * @return объект {@link Person}
      */
     public Person readPerson() {
-        System.out.println("Введите данные автора:");
+        if (!inScript) {
+            System.out.println("Введите данные автора:");
+        }
         String name = readName("  name: ");
         String passportID = readLine("  passportID (Enter для null): ");
         if (passportID.isEmpty()) passportID = null;
@@ -220,19 +322,27 @@ public class ConsoleReader {
      * @return объект {@link LabWork}
      */
     public LabWork readLabWork() {
+        if (!inScript) {
+            System.out.println("Введите данные лабораторной работы:");
+        }
+
         String name = readName("  name: ");
         Coordinates coordinates = readCoordinates();
 
         Double minimalPoint = readNullableDouble("  minimalPoint: ");
 
         while (minimalPoint != null && minimalPoint <= 0) {
-            System.out.println("Ошибка: minimalPoint должно быть больше 0");
+            if (!inScript) {
+                System.out.println("Ошибка: minimalPoint должно быть больше 0");
+            }
             minimalPoint = readNullableDouble("  minimalPoint: ");
         }
 
         double personalQualitiesMinimum = readDouble("  personalQualitiesMinimum (>0): ");
         while (personalQualitiesMinimum <= 0) {
-            System.out.println("Ошибка: personalQualitiesMinimum должно быть больше 0");
+            if (!inScript) {
+                System.out.println("Ошибка: personalQualitiesMinimum должно быть больше 0");
+            }
             personalQualitiesMinimum = readDouble("  personalQualitiesMinimum (>0): ");
         }
 
@@ -247,7 +357,9 @@ public class ConsoleReader {
      * @return объект {@link LabWork}
      */
     public LabWork readLabWorkForReplace() {
-        System.out.println("Введите новые данные лабораторной работы:");
+        if (!inScript) {
+            System.out.println("Введите новые данные лабораторной работы:");
+        }
 
         String name = readName("  name: ");
         Coordinates coordinates = readCoordinates();
@@ -267,5 +379,13 @@ public class ConsoleReader {
      */
     public void close() {
         scanner.close();
+    }
+
+    /**
+     * Проверка, выполняется ли сейчас скрипт
+     * @return true если выполняется скрипт
+     */
+    public boolean isExecutingScript() {
+        return inScript;
     }
 }

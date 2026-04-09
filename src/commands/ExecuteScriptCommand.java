@@ -44,62 +44,42 @@ public class ExecuteScriptCommand implements Command {
 
         String fileName = args[1];
 
-        // Проверка на рекурсию
         if (runningScripts.contains(fileName)) {
             System.out.println("Ошибка: рекурсия! Скрипт " + fileName + " уже выполняется");
             return true;
         }
 
-        runningScripts.add(fileName); // добавляем в "стек" выполняющихся
+        runningScripts.add(fileName);
 
-        // ЧТЕНИЕ Файла
-        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+        try {
+            consoleReader.pushScriptFile(fileName);
+
             String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (line.isEmpty() || line.startsWith("#")) continue; // пропуск пустых и комментариев
+            while (consoleReader.hasNextLine()) {
+                line = consoleReader.readLine();
+                if (line == null || line.isEmpty() || line.startsWith("#")) continue;
 
-                String[] cmdParts = line.split("\\s+", 2); // разделяем команду и аргументы
-                Command cmd = commands.get(cmdParts[0]); // находим команду
+                String[] cmdParts = line.split("\\s+", 2);
+                Command cmd = commands.get(cmdParts[0]);
 
                 if (cmd != null) {
                     boolean result = cmd.execute(cmdParts, collectionManager, consoleReader);
                     if (!result) {
-                        runningScripts.remove(fileName);
                         return false;
                     }
                 } else {
                     System.out.println("Неизвестная команда: " + cmdParts[0]);
                 }
             }
-            // УСПЕХ — выводим сообщение только здесь
+
             System.out.println("Скрипт выполнен: " + fileName);
 
         } catch (FileNotFoundException e) {
             System.out.println("Ошибка: файл не найден - " + fileName);
-        } catch (IOException e) {
-            System.out.println("Ошибка чтения файла: " + e.getMessage());
+        } finally {
+            consoleReader.popScriptFile();
+            runningScripts.remove(fileName);
         }
 
-        runningScripts.remove(fileName);
         return true;
     }
-
-    /**
-     * Функция получения описания команды
-     * @return описание команды
-     */
-    @Override
-    public String getDescription() {
-        return "выполнить скрипт из файла";
-    }
-
-    /**
-     * Функция получения имени команды
-     * @return имя команды
-     */
-    @Override
-    public String getName() {
-        return "execute_script";
-    }
-}
