@@ -14,3 +14,7 @@ data/*.csv
 
 # Логи
 *.log
+
+# Скрипты для execute_script
+my_script*.txt
+*.script
