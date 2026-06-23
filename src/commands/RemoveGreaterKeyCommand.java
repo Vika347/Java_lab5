@@ -7,22 +7,61 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Команда remove_greater_key.
+ * Команда удаления элементов с ключом, превышающим заданный.
+ * <p>
+ * Удаляет из коллекции все элементы, ключ которых больше
+ * указанного пользователем значения.
+ * </p>
  *
- * Удаляет из коллекции все элементы,
- * ключ которых больше заданного.
+ * <p>
+ * Команда принимает один аргумент — целочисленный ключ.
+ * </p>
+ *
+ * @author Виктория Родина
  */
 public class RemoveGreaterKeyCommand extends AbstractCommand {
 
+    /**
+     * Менеджер коллекции, содержащий элементы типа LabWork.
+     */
     private final CollectionManager collectionManager;
+
+    /**
+     * Объект для вывода информации и сообщений об ошибках.
+     */
     private final Console console;
 
+    /**
+     * Создаёт команду удаления элементов с ключом,
+     * превышающим заданное значение.
+     *
+     * @param collectionManager менеджер коллекции
+     * @param console объект для вывода информации и сообщений об ошибках
+     */
     public RemoveGreaterKeyCommand(CollectionManager collectionManager, Console console) {
         super("remove_greater_key", "удалить элементы с ключом больше заданного");
         this.collectionManager = collectionManager;
         this.console = console;
     }
 
+    /**
+     * Выполняет удаление элементов, ключ которых больше указанного.
+     * <p>
+     * Проверяет корректность количества аргументов и преобразует
+     * переданное значение в целое число.
+     * </p>
+     *
+     * <p>
+     * Проходит по коллекции с помощью итератора и удаляет все элементы,
+     * ключ которых превышает заданное значение.
+     * </p>
+     *
+     * <p>
+     * После завершения операции выводит сообщение о результате удаления.
+     * </p>
+     *
+     * @param arguments массив аргументов команды, содержащий ключ
+     */
     @Override
     public void execute(String[] arguments) {
 

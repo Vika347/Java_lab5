@@ -6,108 +6,218 @@ import models.Difficulty;
 import java.util.*;
 
 /**
- * Менеджер коллекции LabWork.
- * Отвечает за хранение и управление коллекцией объектов LabWork в оперативной памяти программы
+ * Менеджер коллекции объектов {@link LabWork}.
+ * <p>
+ * Отвечает за хранение коллекции в оперативной памяти программы,
+ * выполнение основных операций управления элементами, загрузку данных
+ * из файла и сохранение коллекции в файл.
+ * </p>
+ *
+ * <p>
+ * Для хранения используется коллекция {@link Hashtable}
+ * с ключом типа {@link Integer} и значением типа {@link LabWork}.
+ * </p>
+ *
+ * @author Виктория Родина
  */
 public class CollectionManager {
 
+    /**
+     * Коллекция лабораторных работ.
+     */
     private final Hashtable<Integer, LabWork> collection = new Hashtable<>();
-    private final FileManager fileManager; //Менеджер для работы с файлами
-    private final Date initializationDate = new Date(); //Дата и время создания менеджера коллекции
 
-    //Конструктор (охраняет переданный FileManager в поле)
+    /**
+     * Менеджер для чтения коллекции из файла и записи коллекции в файл.
+     */
+    private final FileManager fileManager;
+
+    /**
+     * Дата и время инициализации менеджера коллекции.
+     */
+    private final Date initializationDate = new Date();
+
+    /**
+     * Создаёт менеджер коллекции.
+     *
+     * @param fileManager менеджер работы с файлом
+     */
     public CollectionManager(FileManager fileManager) {
         this.fileManager = fileManager;
     }
 
-    //Загрузка и сохранение
+    /**
+     * Загружает коллекцию из файла.
+     * <p>
+     * Перед загрузкой текущая коллекция очищается. После чтения данных
+     * обновляется генератор идентификаторов на основе максимального ключа
+     * коллекции.
+     * </p>
+     */
     public void loadCollection() {
-        collection.clear(); //Очищает текущую коллекцию
-        collection.putAll(fileManager.readCollection()); //Читает CSV файл, возвращает Hashtable,добавляет все прочитанные элементы
-        updateIdGenerator(); //Обновляет генератор ID на основе максимального ID
+        collection.clear();
+        collection.putAll(fileManager.readCollection());
+        updateIdGenerator();
     }
 
+    /**
+     * Обновляет генератор идентификаторов.
+     * <p>
+     * Находит максимальный ключ в коллекции и передаёт его в
+     * {@link IdGenerator#init(int)}.
+     * </p>
+     */
     private void updateIdGenerator() {
-        int maxId = collection.keySet() //получаем все ключи
-                .stream() // превращаем в поток
-                .max(Integer::compareTo) //ищем максимальное значение
-                .orElse(0);  // если коллекция пуста → 0
+        int maxId = collection.keySet()
+                .stream()
+                .max(Integer::compareTo)
+                .orElse(0);
         if (maxId > 0) {
             IdGenerator.init(maxId);
         }
     }
 
-    //Передаёт коллекцию FileManager для записи в файл.
+    /**
+     * Сохраняет коллекцию в файл.
+     */
     public void saveCollection() {
         fileManager.writeCollection(collection);
     }
 
+    /**
+     * Возвращает коллекцию лабораторных работ.
+     *
+     * @return коллекция объектов {@link LabWork}
+     */
     public Hashtable<Integer, LabWork> getCollection() {
         return collection;
     }
 
-    //Базовые CRUD операции
-
-    // CREATE (создание)
+    /**
+     * Добавляет элемент в коллекцию по заданному ключу.
+     *
+     * @param key ключ элемента
+     * @param labWork добавляемый объект {@link LabWork}
+     */
     public void insert(Integer key, LabWork labWork) {
-        collection.put(key, labWork); //Добавляет элемент в коллекцию по ключу.
+        collection.put(key, labWork);
     }
 
-    // UPDATE (обновление) ID и дата создания НЕ меняются
+    /**
+     * Обновляет элемент коллекции по ключу.
+     * <p>
+     * При обновлении сохраняются старые значения полей {@code id}
+     * и {@code creationDate}.
+     * </p>
+     *
+     * @param key ключ обновляемого элемента
+     * @param newLabWork новый объект {@link LabWork}
+     */
     public void update(Integer key, LabWork newLabWork) {
-        if (!collection.containsKey(key)) return; //Проверка существования ключа
-        LabWork old = collection.get(key); //Получаем старый элемент
-        newLabWork.setId(old.getId()); //Устанавливаем ID нового элемента
-        newLabWork.setCreationDate(old.getCreationDate()); //Устанавливаем дату нового элемента
-        collection.put(key, newLabWork); //Сохраняем в коллекцию
+        if (!collection.containsKey(key)) return;
+        LabWork old = collection.get(key);
+        newLabWork.setId(old.getId());
+        newLabWork.setCreationDate(old.getCreationDate());
+        collection.put(key, newLabWork);
     }
 
-    // DELETE (удаление элементов по ключу)
+    /**
+     * Удаляет элемент коллекции по ключу.
+     *
+     * @param key ключ удаляемого элемента
+     */
     public void remove(Integer key) {
         collection.remove(key);
     }
 
-    //DELETE ALL (очищение всей коллекции)
+    /**
+     * Очищает коллекцию.
+     */
     public void clear() {
         collection.clear();
     }
 
-    //READ (возвращает элемент по ключу)
+    /**
+     * Возвращает элемент коллекции по ключу.
+     *
+     * @param key ключ элемента
+     * @return объект {@link LabWork}, связанный с указанным ключом,
+     * или {@code null}, если элемент не найден
+     */
     public LabWork get(Integer key) {
         return collection.get(key);
     }
 
-    //Сортировка:
+    /**
+     * Возвращает элементы коллекции в отсортированном порядке.
+     * <p>
+     * Сортировка выполняется согласно естественному порядку объектов
+     * {@link LabWork}.
+     * </p>
+     *
+     * @return список отсортированных объектов {@link LabWork}
+     */
     public List<LabWork> getSorted() {
-        List<LabWork> list = new ArrayList<>(collection.values()); //Получаем все значения Hashtable, копируем в ArrayList
-        Collections.sort(list); //Сортируем список (использует compareTo из LabWork)
-        return list; //Возвращаем отсортированный список
+        List<LabWork> list = new ArrayList<>(collection.values());
+        Collections.sort(list);
+        return list;
     }
 
+    /**
+     * Возвращает количество элементов в коллекции.
+     *
+     * @return размер коллекции
+     */
     public int size() {
         return collection.size();
     }
 
+    /**
+     * Возвращает дату инициализации коллекции.
+     *
+     * @return дата инициализации менеджера коллекции
+     */
     public Date getInitializationDate() {
         return initializationDate;
     }
 
-    // проверка существования элемент с таким ключом
+    /**
+     * Проверяет наличие элемента с указанным ключом.
+     *
+     * @param key проверяемый ключ
+     * @return {@code true}, если ключ содержится в коллекции;
+     * иначе {@code false}
+     */
     public boolean containsKey(Integer key) {
         return collection.containsKey(key);
     }
 
-   // удалить все элементы, больше заданного
+    /**
+     * Удаляет из коллекции все элементы, превышающие заданный объект.
+     *
+     * @param element объект {@link LabWork}, с которым сравниваются элементы коллекции
+     */
     public void removeGreater(LabWork element) {
         collection.values().removeIf(lw -> lw.compareTo(element) > 0);
     }
 
-    //Удаление элементов, больших заданного
+    /**
+     * Удаляет из коллекции все элементы, ключ которых больше заданного.
+     *
+     * @param key ключ, с которым сравниваются ключи элементов коллекции
+     */
     public void removeGreaterKey(Integer key) {
         collection.keySet().removeIf(k -> k > key);
     }
 
-    //Замена, если новый элемент меньше
+    /**
+     * Заменяет элемент по ключу, если новый элемент меньше старого.
+     *
+     * @param key ключ заменяемого элемента
+     * @param newElement новый объект {@link LabWork}
+     * @return {@code true}, если замена была выполнена;
+     * иначе {@code false}
+     */
     public boolean replaceIfLower(Integer key, LabWork newElement) {
         LabWork old = collection.get(key);
         if (old != null && newElement.compareTo(old) < 0) {
@@ -119,21 +229,36 @@ public class CollectionManager {
         return false;
     }
 
-    //Подсчёт по автору
+    /**
+     * Подсчитывает количество элементов с заданным именем автора.
+     *
+     * @param authorName имя автора
+     * @return количество элементов, автор которых имеет указанное имя
+     */
     public long countByAuthor(String authorName) {
         return collection.values().stream()
                 .filter(lw -> lw.getAuthor().getName().equals(authorName))
                 .count();
     }
 
-    //Фильтр по сложности
+    /**
+     * Возвращает элементы с указанным уровнем сложности.
+     *
+     * @param difficulty уровень сложности
+     * @return список элементов с заданной сложностью
+     */
     public List<LabWork> filterByDifficulty(Difficulty difficulty) {
         return collection.values().stream()
                 .filter(lw -> lw.getDifficulty() == difficulty)
                 .toList();
     }
 
-    //Фильтр по автору (меньше заданного)
+    /**
+     * Возвращает элементы, имя автора которых лексикографически меньше заданного.
+     *
+     * @param authorName имя автора для сравнения
+     * @return список элементов, удовлетворяющих условию фильтрации
+     */
     public List<LabWork> filterLessThanAuthor(String authorName) {
         return collection.values().stream()
                 .filter(lw -> lw.getAuthor().getName().compareTo(authorName) < 0)

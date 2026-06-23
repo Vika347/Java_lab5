@@ -5,34 +5,48 @@ import managers.IdGenerator;
 
 import java.util.Date;
 
+/**
+ * Класс для создания и заполнения объектов {@link LabWork}.
+ * Поддерживает интерактивный ввод и чтение данных из скрипта.
+ */
 public class LabWorkAsker {
 
     private final ReaderManager readerManager;
     private final Console console;
     private boolean interactiveMode = true;
 
-    //Конструктор
+    /**
+     * Создаёт объект для ввода данных LabWork.
+     *
+     * @param readerManager менеджер чтения данных
+     * @param console объект для вывода сообщений
+     */
     public LabWorkAsker(ReaderManager readerManager, Console console) {
         this.readerManager = readerManager;
         this.console = console;
     }
 
     /**
-     * Включает/выключает интерактивный режим.
-     * Если interactiveMode = false, данные читаются из скрипта построчно.
+     * Включает или выключает интерактивный режим.
+     *
+     * @param interactive true, если режим интерактивный; false, если данные читаются из скрипта
      */
-    //Переключение режима
     public void setInteractiveMode(boolean interactive) {
         this.interactiveMode = interactive;
     }
 
+    /**
+     * Создаёт и заполняет объект {@link LabWork}.
+     *
+     * @return заполненный объект LabWork или null, если операция отменена
+     */
     public LabWork askLabWork() {
         try {
             LabWork lab = new LabWork();
-            lab.setId(IdGenerator.nextId());//Генерирует уникальный ID через IdGenerator
-            lab.setCreationDate(new Date());//Устанавливает текущую дату создания
+            lab.setId(IdGenerator.nextId());
+            lab.setCreationDate(new Date());
 
-            lab.setName(askName());//Запрашивает имя
+            lab.setName(askName());
             lab.setCoordinates(askCoordinates());
             lab.setMinimalPoint(askMinimalPoint());
             lab.setPersonalQualitiesMinimum(askPersonalQualities());
@@ -46,6 +60,11 @@ public class LabWorkAsker {
         }
     }
 
+    /**
+     * Запрашивает название лабораторной работы.
+     *
+     * @return название LabWork
+     */
     private String askName() {
         if (interactiveMode) {
             while (true) {
@@ -63,6 +82,11 @@ public class LabWorkAsker {
         }
     }
 
+    /**
+     * Запрашивает координаты лабораторной работы.
+     *
+     * @return объект координат
+     */
     private Coordinates askCoordinates() {
         if (interactiveMode) {
             while (true) {
@@ -86,7 +110,6 @@ public class LabWorkAsker {
                 }
             }
         } else {
-            // Неинтерактивный режим
             try {
                 String xStr = readerManager.readLine();
                 if (xStr == null) throw new RuntimeException("Ввод прерван");
@@ -106,6 +129,11 @@ public class LabWorkAsker {
         }
     }
 
+    /**
+     * Запрашивает значение минимального балла.
+     *
+     * @return значение minimalPoint или null
+     */
     private Integer askMinimalPoint() {
         if (interactiveMode) {
             while (true) {
@@ -135,6 +163,11 @@ public class LabWorkAsker {
         }
     }
 
+    /**
+     * Запрашивает значение минимальных личных качеств.
+     *
+     * @return значение personalQualitiesMinimum
+     */
     private float askPersonalQualities() {
         if (interactiveMode) {
             while (true) {
@@ -158,6 +191,11 @@ public class LabWorkAsker {
         }
     }
 
+    /**
+     * Запрашивает сложность лабораторной работы.
+     *
+     * @return значение перечисления Difficulty
+     */
     private Difficulty askDifficulty() {
         if (interactiveMode) {
             while (true) {
@@ -178,10 +216,14 @@ public class LabWorkAsker {
         }
     }
 
+    /**
+     * Запрашивает данные автора лабораторной работы.
+     *
+     * @return объект Person
+     */
     private Person askPerson() {
         Person p = new Person();
 
-        // Имя автора
         if (interactiveMode) {
             while (true) {
                 console.print("Введите имя автора: ");
@@ -200,24 +242,24 @@ public class LabWorkAsker {
             p.setName(name);
         }
 
-        // PassportID
         console.print("Введите passportID (можно пусто): ");
         String passport = readerManager.readLine();
         if (passport == null) throw new RuntimeException("Ввод прерван");
         p.setPassportID(Validator.validatePassportId(passport) && !passport.isBlank() ? passport : null);
 
-        // EyeColor
         p.setEyeColor(askColor("eyeColor"));
-
-        // HairColor
         p.setHairColor(askColor("hairColor"));
-
-        // Location
         p.setLocation(askLocation());
 
         return p;
     }
 
+    /**
+     * Запрашивает цвет для указанного поля.
+     *
+     * @param fieldName имя поля, для которого запрашивается цвет
+     * @return значение Color или null
+     */
     private Color askColor(String fieldName) {
         if (interactiveMode) {
             while (true) {
@@ -240,6 +282,11 @@ public class LabWorkAsker {
         }
     }
 
+    /**
+     * Запрашивает местоположение автора.
+     *
+     * @return объект Location
+     */
     private Location askLocation() {
         if (interactiveMode) {
             while (true) {

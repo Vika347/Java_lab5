@@ -8,44 +8,76 @@ import java.util.*;
 
 /**
  * Менеджер команд.
- * Он управляет командами: регистрирует их, ищет по имени и выполняет
+ * <p>
+ * Отвечает за регистрацию, хранение, поиск и выполнение команд приложения.
+ * Поддерживает интерактивный режим работы с пользователем.
+ * </p>
+ *
+ * @author Виктория Родина
  */
 public class CommandManager {
 
+    /**
+     * Коллекция зарегистрированных команд.
+     * Ключом является имя команды.
+     */
     private final Map<String, Command> commands = new LinkedHashMap<>();
+
+    /**
+     * Объект для вывода сообщений пользователю.
+     */
     private final Console console;
 
-    //Конструктор
+    /**
+     * Создаёт менеджер команд.
+     *
+     * @param console объект для вывода сообщений и ошибок
+     */
     public CommandManager(Console console) {
         this.console = console;
     }
 
-    //Регистрация команд(сохраняет команду в Map под её именем)
+    /**
+     * Регистрирует команду.
+     *
+     * @param command команда, которую необходимо добавить
+     */
     public void register(Command command) {
         commands.put(command.getName(), command);
     }
 
-    //Получение команды по имени
+    /**
+     * Возвращает команду по её имени.
+     *
+     * @param name имя команды
+     * @return объект команды или {@code null}, если команда не найдена
+     */
     public Command getCommand(String name) {
         return commands.get(name);
     }
 
-    //Выполнение команды по строке ввода
+    /**
+     * Выполняет команду по введённой строке.
+     * <p>
+     * Разбивает строку на имя команды и её аргументы,
+     * после чего вызывает выполнение соответствующей команды.
+     * </p>
+     *
+     * @param input строка, введённая пользователем
+     */
     public void executeCommand(String input) {
         if (input == null || input.isBlank()) return;
 
-        //Разбивает строку на части по пробелам.
         String[] parts = input.trim().split("\\s+");
         String commandName = parts[0];
-        //Ищет команду в Map по имени
+
         Command command = commands.get(commandName);
 
         if (command == null) {
             console.printError("Неизвестная команда: " + commandName);
-            return; //Если команда не найдена — выводим ошибку и выходим.
+            return;
         }
 
-        // Копирует все части, начиная со второй (индекс 1), в отдельный массив — это аргументы команды
         String[] args = Arrays.copyOfRange(parts, 1, parts.length);
 
         try {
@@ -56,15 +88,19 @@ public class CommandManager {
     }
 
     /**
-     * Интерактивный режим работы.
+     * Запускает интерактивный режим работы программы.
+     * <p>
+     * В цикле считывает команды пользователя и передаёт их
+     * на выполнение. При получении конца ввода завершает работу.
+     * </p>
+     *
+     * @param readerManager менеджер чтения пользовательского ввода
      */
-    //Запускает бесконечный цикл, который
     public void startInteractiveMode(ReaderManager readerManager) {
         while (true) {
             console.print("> ");
             String line = readerManager.readLine();
 
-            // Ctrl+D — завершаем программу
             if (line == null) {
                 console.println("\nЗавершение работы...");
                 break;
@@ -74,12 +110,18 @@ public class CommandManager {
                 continue;
             }
 
-            executeCommand(line);//Передаёт введённую строку методу executeCommand() для выполнения.
+            executeCommand(line);
         }
     }
 
-    //Получение всех команд
+    /**
+     * Возвращает все зарегистрированные команды.
+     *
+     * @return коллекция зарегистрированных команд
+     */
     public Collection<Command> getCommands() {
         return commands.values();
     }
 }
+
+

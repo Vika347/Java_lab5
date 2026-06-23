@@ -5,21 +5,58 @@ import models.LabWork;
 import utility.Console;
 
 /**
- * Команда filter_less_than_author.
+ * Команда фильтрации элементов по имени автора.
+ * <p>
+ * Выводит все объекты {@link LabWork}, имя автора которых
+ * лексикографически меньше заданного пользователем значения.
+ * </p>
  *
- * Выводит элементы, у которых имя автора меньше заданного (лексикографически).
+ * <p>
+ * Сравнение выполняется с помощью метода {@link String#compareTo(String)}.
+ * Команда принимает один аргумент — имя автора.
+ * </p>
+ *
+ * @author Виктория Родина
  */
 public class FilterLessThanAuthorCommand extends AbstractCommand {
 
+    /**
+     * Менеджер коллекции, содержащий объекты {@link LabWork}.
+     */
     private final CollectionManager collectionManager;
+
+    /**
+     * Объект для вывода информации и сообщений об ошибках.
+     */
     private final Console console;
 
+    /**
+     * Создаёт команду фильтрации по имени автора.
+     *
+     * @param collectionManager менеджер коллекции
+     * @param console объект для вывода информации и сообщений об ошибках
+     */
     public FilterLessThanAuthorCommand(CollectionManager collectionManager, Console console) {
         super("filter_less_than_author", "вывести элементы, автор которых меньше заданного");
         this.collectionManager = collectionManager;
         this.console = console;
     }
 
+    /**
+     * Выполняет фильтрацию элементов коллекции по имени автора.
+     * <p>
+     * Проверяет корректность количества аргументов. Затем проходит по всем
+     * элементам коллекции и выводит те объекты, имя автора которых
+     * лексикографически меньше переданного значения.
+     * </p>
+     *
+     * <p>
+     * Если подходящих элементов не найдено, пользователю выводится
+     * соответствующее сообщение.
+     * </p>
+     *
+     * @param arguments массив аргументов команды, содержащий имя автора
+     */
     @Override
     public void execute(String[] arguments) {
 

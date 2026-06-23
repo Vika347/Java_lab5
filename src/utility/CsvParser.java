@@ -5,11 +5,35 @@ import models.*;
 import java.util.Date;
 
 /**
- * Парсер CSV строк для объектов LabWork.
- * Он превращает строки из файла в объекты LabWork и обратно( файл хранит текст, а программе нужны объекты)
+ * Утилитарный класс для преобразования объектов {@link LabWork}
+ * в формат CSV и обратно.
+ * <p>
+ * Используется для загрузки коллекции из файла и сохранения
+ * коллекции в файл. Позволяет преобразовывать строковое
+ * представление данных в объекты и выполнять обратное преобразование.
+ * </p>
+ *
+ * <p>
+ * Все методы класса являются статическими.
+ * </p>
+ *
+ * @author Виктория Родина
  */
 public class CsvParser {
 
+    /**
+     * Создаёт объект {@link LabWork} из строки в формате CSV.
+     * <p>
+     * Строка должна содержать данные, разделённые символом {@code ';'}.
+     * В случае некорректного формата выбрасывается исключение.
+     * </p>
+     *
+     * @param line строка с данными объекта LabWork
+     * @return созданный объект {@link LabWork}
+     * @throws IllegalArgumentException если строка содержит недостаточное
+     * количество полей
+     * @throws NumberFormatException если числовые поля содержат некорректные значения
+     */
     public static LabWork parseLabWork(String line) {
         String[] data = line.split(";");
 
@@ -49,11 +73,32 @@ public class CsvParser {
         return lab;
     }
 
+    /**
+     * Преобразует строковое представление цвета
+     * в значение перечисления {@link Color}.
+     *
+     * @param value строковое представление цвета
+     * @return соответствующее значение {@link Color} или {@code null},
+     * если строка пуста или равна {@code null}
+     * @throws IllegalArgumentException если значение не соответствует
+     * ни одной константе перечисления
+     */
     private static Color parseColor(String value) {
         if (value == null || value.isEmpty()) return null;
         return Color.valueOf(value.toUpperCase());
     }
 
+    /**
+     * Преобразует объект {@link LabWork} в строку формата CSV.
+     * <p>
+     * Значения полей разделяются символом {@code ';'}.
+     * Поля, допускающие значение {@code null},
+     * сохраняются как пустые строки.
+     * </p>
+     *
+     * @param lab объект лабораторной работы
+     * @return строка в формате CSV
+     */
     public static String toCsv(LabWork lab) {
         return lab.getId() + ";" +
                 lab.getName() + ";" +
